@@ -1,3 +1,5 @@
 pandas
 db-sqlite3
 typing
+fastapi
+uvicorn
