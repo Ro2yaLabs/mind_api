@@ -66,22 +66,22 @@ def mind(response):
         personality_type = "".join([trait_letters[trait] for trait in traits])
         personality["title"] = personality_type
         
-        v_score, a_score, ks_score, kf_score, kp_score = 0, 0, 0, 0, 0
+        v_score, a_score, k_score = 0, 0, 0
 
         for idx, response in enumerate(user_responses):
 
-            vn_value, kf_value, kp_value, as_value, ks_value = df_vak.loc[idx, ["VN", "KF", "KP", "AS", "KS"]]
+            v_value, a_value, k_value = df_vak.loc[idx, ["V", "A", "K"]]
 
-            if response in [1, 2]:
-                v_score += scoring_methods.get(vn_value, {}).get(response, 0)
-                kf_score += scoring_methods.get(kf_value, {}).get(response, 0)
-                kp_score += scoring_methods.get(kp_value, {}).get(response, 0)
-            elif response in [3, 4]:
-                a_score += scoring_methods.get(as_value, {}).get(response, 0)
-                ks_score += scoring_methods.get(ks_value, {}).get(response, 0)
+            if response in [3, 4]:
+                v_score += 1
+                a_score += 1
+                k_score += 1
+            elif response in [1, 2]:
+                a_value += 1
+                k_value += 1
 
-        total = v_score + a_score + ks_score + kf_score + kp_score
-        Visual, Auditory, Kinesthetic = round(v_score/total*100, 2), round(a_score/total*100, 2), round((ks_score + kf_score + kp_score)/total*100, 2)
+        total = v_score + a_score + k_score
+        Visual, Auditory, Kinesthetic = round(v_score/total*100, 2), round(a_score/total*100, 2), round((k_score)/total*100, 2)
 
         type = "Visual" if Auditory<Visual>Kinesthetic else "Auditory" if Visual<Auditory>Kinesthetic else "Kinesthetic"
 
