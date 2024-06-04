@@ -1,12 +1,7 @@
 from mind import mind
-
-import pandas as pd
-import os
-from fastapi import FastAPI, HTTPException
-from typing import List, Dict
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from schema import Message
-import sqlite3
 
 app = FastAPI()
 app.add_middleware(
@@ -18,5 +13,5 @@ app.add_middleware(
 )
 
 @app.post("/assessment")
-def houda(response: Message):
+def mind_assessment(response: Message):
     return mind(response)
