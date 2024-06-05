@@ -23,7 +23,6 @@ def mind(response):
         df_qtm = read_table("QTM")
 
         scoring_methods = {
-        "A0": {1: 1, 2: 1, 3: 1, 4: 1},
         "A1": {1: 1, 2: 2, 3: 3, 4: 4},
         "A2": {1: 4, 2: 3, 3: 2, 4: 1},
         "A3": {1: 1, 2: 4, 3: 4, 4: 1},
@@ -62,33 +61,43 @@ def mind(response):
 
         personality_type = "".join([trait_letters[trait] for trait in traits])
         personality["title"] = personality_type
-        
+                
         v_score, a_score, k_score = 0, 0, 0
 
-        for idx, response in enumerate(user_responses):
+        # Scoring for Visual
+        for idx, v_value in enumerate(df_vak["V"]):
+            if pd.notna(v_value) and user_responses[idx + 1] in [3, 4]:
+                v_score += 1
 
-            v_value, a_value, k_value = df_vak.loc[idx, ["V", "A", "K"]]
+        # Scoring for Auditory
+        for idx, a_value in enumerate(df_vak["A"]):
+            if pd.notna(a_value):
+                if "A34" in a_value and user_responses[idx + 1] in [3, 4]:
+                    a_score += 1
+                elif "A12" in a_value and user_responses[idx + 1] in [1, 2]:
+                    a_score += 1
 
-            if response in [3, 4]:
-                v_score += scoring_methods.get(v_value, {}).get(response, 0)
-                a_score += scoring_methods.get(a_value, {}).get(response, 0)
-                k_score += scoring_methods.get(k_value, {}).get(response, 0)
-            elif response in [1, 2]:
-                a_score += scoring_methods.get(a_value, {}).get(response, 0)
-                k_score += scoring_methods.get(k_value, {}).get(response, 0)
+        # Scoring for Kinesthetic
+        for idx, k_value in enumerate(df_vak["K"]):
+            if pd.notna(k_value):
+                if "A34" in k_value and user_responses[idx + 1] in [3, 4]:
+                    k_score += 1
+                elif "A12" in k_value and user_responses[idx + 1] in [1, 2]:
+                    k_score += 1
 
         total = v_score + a_score + k_score
-        Visual, Auditory, Kinesthetic = round(v_score/total*100, 2), round(a_score/total*100, 2), round((k_score)/total*100, 2)
-
-        type = "Visual" if Auditory<Visual>Kinesthetic else "Auditory" if Visual<Auditory>Kinesthetic else "Kinesthetic"
-
-        vak = {
-            "type": type,
-            "visual": Visual,
-            "auditory": Auditory,
-            "kinesthetic": Kinesthetic
-        }
-        
+        if total > 0:
+            Visual, Auditory, Kinesthetic = round(v_score/total*100, 2), round(a_score/total*100, 2), round(k_score/total*100, 2)
+            type = max(('Visual', Visual), ('Auditory', Auditory), ('Kinesthetic', Kinesthetic), key=lambda x: x[1])[0]
+            vak = {
+                "type": type,
+                "visual": Visual,
+                "auditory": Auditory,
+                "kinesthetic": Kinesthetic
+            }
+        else:
+            vak = {"type": None, "visual": 0, "auditory": 0, "kinesthetic": 0}
+         
         scores_emq = {"SelfAwarness": 0, "ManagingEmotions": 0, "MotivatingOneself": 0, "Empathy": 0, "SocialSkills": 0}
         for idx, row in df_emq.iterrows():
             response = user_responses[idx]
@@ -97,7 +106,6 @@ def mind(response):
                 scoring_method = row[category]
                 if pd.notna(scoring_method) and scoring_method != "":
                     scores_emq[category] += scoring_methods[scoring_method][response]
-
 
         ei = {
             "SelfAwarness": scores_emq["SelfAwarness"],
